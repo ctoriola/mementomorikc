@@ -25,8 +25,14 @@ export default async function handler(req, res) {
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID; // your personal chat id
 
+  console.log('Booking handler called');
+  console.log('Bot Token present:', !!botToken);
+  console.log('Chat ID present:', !!chatId);
+  console.log('Chat ID value:', chatId);
+
   if (!botToken || !chatId) {
     // Not configured: return helpful error so site owner can set env vars on Vercel
+    console.error('Missing Telegram configuration:', { botToken: !!botToken, chatId: !!chatId });
     res.status(500).send('Server not configured for Telegram notifications.');
     return;
   }
@@ -39,11 +45,16 @@ export default async function handler(req, res) {
       parse_mode: 'Markdown'
     };
 
+    console.log('Sending to Telegram URL:', url);
+    console.log('Payload:', JSON.stringify(payload, null, 2));
+
     const r = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
+
+    console.log('Telegram response status:', r.status);
 
     if (!r.ok) {
       const body = await r.text();
@@ -52,6 +63,8 @@ export default async function handler(req, res) {
       return;
     }
 
+    const responseData = await r.json();
+    console.log('Telegram response success:', responseData);
     res.status(200).send('Thank You! Your booking has been sent.');
   } catch (err) {
     console.error('Booking handler error', err);
